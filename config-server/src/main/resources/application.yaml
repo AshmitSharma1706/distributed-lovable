@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: config-server
+
+  cloud:
+    config.server.git:
+      uri: https://github.com/AshmitSharma1706/lovable-config-server
+      username: AshmitSharma1706
+      password: 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
+      default-label: main
+
+server.port: 8888
