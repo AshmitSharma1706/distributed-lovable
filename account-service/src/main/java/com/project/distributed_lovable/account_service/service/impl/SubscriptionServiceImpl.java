@@ -10,6 +10,7 @@ import com.project.distributed_lovable.account_service.repository.PlanRepository
 import com.project.distributed_lovable.account_service.repository.SubscriptionRepository;
 import com.project.distributed_lovable.account_service.repository.UserRepository;
 import com.project.distributed_lovable.account_service.service.SubscriptionService;
+import com.project.distributed_lovable.common_lib.dto.PlanDto;
 import com.project.distributed_lovable.common_lib.enums.SubscriptionStatus;
 import com.project.distributed_lovable.common_lib.error.ResourceNotFoundException;
 import com.project.distributed_lovable.common_lib.security.AuthUtil;
@@ -138,6 +139,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         subscription.setStatus(SubscriptionStatus.PAST_DUE);
         subscriptionRepository.save(subscription);
+    }
+
+    @Override
+    public PlanDto getCurrentSubscribedPlanByUser() {
+        SubscriptionResponse subscriptionResponse=getCurrentSubscription();
+        return subscriptionResponse.plan();
     }
 
     private User getUser(Long userId){
