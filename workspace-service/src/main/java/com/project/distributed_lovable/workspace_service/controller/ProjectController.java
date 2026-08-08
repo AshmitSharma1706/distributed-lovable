@@ -15,14 +15,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/projects")
+@RequestMapping("/projects")
 @RequiredArgsConstructor
 public class ProjectController {
 
     private final ProjectService projectService;
     private final DeploymentService deploymentService;
 
-    @PostMapping("create")
+    @PostMapping("/create")
     public ResponseEntity<ProjectResponse> createProject(@RequestBody @Valid ProjectRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(projectService.createProject(request));
     }
