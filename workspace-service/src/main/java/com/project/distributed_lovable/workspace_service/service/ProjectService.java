@@ -2,6 +2,7 @@ package com.project.distributed_lovable.workspace_service.service;
 
 
 
+import com.project.distributed_lovable.common_lib.enums.ProjectPermission;
 import com.project.distributed_lovable.workspace_service.dto.project.ProjectRequest;
 import com.project.distributed_lovable.workspace_service.dto.project.ProjectResponse;
 import com.project.distributed_lovable.workspace_service.dto.project.ProjectSummaryResponse;
@@ -18,4 +19,6 @@ public interface ProjectService {
     ProjectResponse updateProject(Long projectId, ProjectRequest request);
 
     void softDelete(Long projectId);
+
+    boolean hasPermission(Long projectId, ProjectPermission permission);
 }

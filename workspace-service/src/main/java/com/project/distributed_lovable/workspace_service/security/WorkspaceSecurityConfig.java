@@ -1,6 +1,7 @@
 package com.project.distributed_lovable.workspace_service.security;
 
 import com.project.distributed_lovable.common_lib.security.JwtAuthFilter;
+import jakarta.servlet.DispatcherType;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -32,6 +33,7 @@ public class WorkspaceSecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

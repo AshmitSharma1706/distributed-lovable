@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
-@RequestMapping("/internal/v1/")
+@RequestMapping("/internal/v1")
 @RestController
 public class InternalWorkspaceController {
 
@@ -25,11 +25,11 @@ public class InternalWorkspaceController {
         return projectFileService.getFileContent(projectId, path);
     }
 
-//    @GetMapping("/projects/{projectId}/permissions/check")
-//    public boolean checkProjectPermission(
-//            @PathVariable Long projectId,
-//            @RequestParam ProjectPermission permission) {
-//        return projectService.hasPermission(projectId, permission);
-//    }
+    @GetMapping("/projects/{projectId}/permissions/check")
+    public boolean checkProjectPermission(
+            @PathVariable Long projectId,
+            @RequestParam ProjectPermission permission) {
+        return projectService.hasPermission(projectId, permission);
+    }
 }
 

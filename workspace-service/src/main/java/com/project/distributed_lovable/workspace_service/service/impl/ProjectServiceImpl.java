@@ -2,6 +2,7 @@ package com.project.distributed_lovable.workspace_service.service.impl;
 
 
 import com.project.distributed_lovable.common_lib.dto.PlanDto;
+import com.project.distributed_lovable.common_lib.enums.ProjectPermission;
 import com.project.distributed_lovable.common_lib.enums.ProjectRole;
 import com.project.distributed_lovable.common_lib.error.BadRequestException;
 import com.project.distributed_lovable.common_lib.error.ResourceNotFoundException;
@@ -16,6 +17,7 @@ import com.project.distributed_lovable.workspace_service.entity.ProjectMemberId;
 import com.project.distributed_lovable.workspace_service.mapper.ProjectMapper;
 import com.project.distributed_lovable.workspace_service.repository.ProjectMemberRepository;
 import com.project.distributed_lovable.workspace_service.repository.ProjectRepository;
+import com.project.distributed_lovable.workspace_service.security.SecurityExpressions;
 import com.project.distributed_lovable.workspace_service.service.ProjectService;
 import com.project.distributed_lovable.workspace_service.service.ProjectTemplateService;
 import jakarta.transaction.Transactional;
@@ -40,6 +42,7 @@ public class ProjectServiceImpl implements ProjectService {
     AuthUtil authUtil;
     ProjectTemplateService projectTemplateService;
     AccountClient accountClient;
+    SecurityExpressions securityExpressions;
 
     @Override
     public ProjectResponse createProject(ProjectRequest request) {
@@ -107,6 +110,11 @@ public class ProjectServiceImpl implements ProjectService {
         Project project= getAccessibleProjectById(projectId, userId);
         project.setDeletedAt(Instant.now());
         projectRepository.save(project);
+    }
+
+    @Override
+    public boolean hasPermission(Long projectId, ProjectPermission permission) {
+        return securityExpressions.hasPermission(projectId, permission);
     }
 
     public Project getAccessibleProjectById(Long projectId, Long userId){

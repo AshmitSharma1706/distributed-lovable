@@ -1,8 +1,8 @@
-package com.project.distributed_lovable.workspace_service.security;
+package com.project.distributed_lovable.intelligence_service.security;
 
 import com.project.distributed_lovable.common_lib.enums.ProjectPermission;
 import com.project.distributed_lovable.common_lib.security.AuthUtil;
-import com.project.distributed_lovable.workspace_service.repository.ProjectMemberRepository;
+import com.project.distributed_lovable.intelligence_service.client.WorkspaceClient;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SecurityExpressions {
-    ProjectMemberRepository projectMemberRepository;
     AuthUtil authUtil;
+    WorkspaceClient workspaceClient;
 
     public boolean canViewProject(Long projectId){
         return hasPermission(projectId, ProjectPermission.VIEW);
@@ -35,10 +35,7 @@ public class SecurityExpressions {
         return hasPermission(projectId, ProjectPermission.MANAGE_MEMBER);
     }
 
-    public boolean hasPermission(Long projectId, ProjectPermission permission){
-        Long userId= authUtil.getCurrentUserId();
-        return projectMemberRepository.findRoleByProjectIdAndUserId(projectId,userId)
-                .map(role -> role.getPermissions().contains(permission))
-                .orElse(false);
+    private boolean hasPermission(Long projectId, ProjectPermission permission){
+        return workspaceClient.checkPermission(projectId, permission);
     }
 }

@@ -24,6 +24,8 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
@@ -47,21 +49,21 @@ public class AiGenerationServiceImpl implements AiGenerationService {
     private final UsageService usageService;
     private final WorkspaceClient workspaceClient;
 
-    private static final Pattern FILE_TAG_PATTERN = Pattern.compile("<file path=\"([^\"]+)\">(.*?)</file>", Pattern.DOTALL);
-
     @Override
     @PreAuthorize("@security.canEditProject(#projectId)")
     public Flux<StreamResponse> streamResponse(String userMessage, Long projectId) {
         Long userId= authUtil.getCurrentUserId();
+        String authorization = getCurrentAuthorization();
         ChatSession chatSession =createChatSessionIfNotExists(projectId, userId);
-        Map<String, Object> advisorParams=Map.of(
+        Map<String, Object> advisorParams = Map.of(
                 "userId", userId,
-                "projectId", projectId
+                "projectId", projectId,
+                "authorization", authorization
         );
 
         StringBuilder fullResponseBuffer=new StringBuilder();
 
-        CodeGenerationTools codeGenerationTools=new CodeGenerationTools(projectId,workspaceClient);
+        CodeGenerationTools codeGenerationTools=new CodeGenerationTools(projectId,workspaceClient,authorization);
 
         AtomicReference<Long> startTime = new AtomicReference<>(System.currentTimeMillis());
         AtomicReference<Long> endTime = new AtomicReference<>(0L);
@@ -162,5 +164,24 @@ public class AiGenerationServiceImpl implements AiGenerationService {
             chatSession = chatSessionRepository.save(chatSession);
         }
         return chatSession;
+    }
+
+    private String getCurrentAuthorization() {
+
+        ServletRequestAttributes attributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+        if (attributes == null) {
+            throw new IllegalStateException("No current HTTP request found");
+        }
+
+        String authorization =
+                attributes.getRequest().getHeader("Authorization");
+
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            throw new IllegalStateException("Authorization header is missing");
+        }
+
+        return authorization;
     }
 }
