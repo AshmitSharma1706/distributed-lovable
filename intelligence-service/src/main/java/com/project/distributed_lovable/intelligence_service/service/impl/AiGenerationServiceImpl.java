@@ -1,7 +1,9 @@
 package com.project.distributed_lovable.intelligence_service.service.impl;
 
+import com.project.distributed_lovable.common_lib.enums.ChatEventStatus;
 import com.project.distributed_lovable.common_lib.enums.ChatEventType;
 import com.project.distributed_lovable.common_lib.enums.MessageRole;
+import com.project.distributed_lovable.common_lib.event.FileStoreRequestEvent;
 import com.project.distributed_lovable.common_lib.security.AuthUtil;
 import com.project.distributed_lovable.intelligence_service.client.WorkspaceClient;
 import com.project.distributed_lovable.intelligence_service.dto.chat.StreamResponse;
@@ -22,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.metadata.Usage;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -31,6 +34,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -48,22 +52,21 @@ public class AiGenerationServiceImpl implements AiGenerationService {
     private final ChatEventRepository chatEventRepository;
     private final UsageService usageService;
     private final WorkspaceClient workspaceClient;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     @PreAuthorize("@security.canEditProject(#projectId)")
     public Flux<StreamResponse> streamResponse(String userMessage, Long projectId) {
         Long userId= authUtil.getCurrentUserId();
-        String authorization = getCurrentAuthorization();
         ChatSession chatSession =createChatSessionIfNotExists(projectId, userId);
         Map<String, Object> advisorParams = Map.of(
                 "userId", userId,
-                "projectId", projectId,
-                "authorization", authorization
+                "projectId", projectId
         );
 
         StringBuilder fullResponseBuffer=new StringBuilder();
 
-        CodeGenerationTools codeGenerationTools=new CodeGenerationTools(projectId,workspaceClient,authorization);
+        CodeGenerationTools codeGenerationTools=new CodeGenerationTools(projectId,workspaceClient);
 
         AtomicReference<Long> startTime = new AtomicReference<>(System.currentTimeMillis());
         AtomicReference<Long> endTime = new AtomicReference<>(0L);
@@ -96,7 +99,7 @@ public class AiGenerationServiceImpl implements AiGenerationService {
                 .doOnComplete(() -> {
                     Schedulers.boundedElastic().schedule(() ->{
                                 long duration = (endTime.get() - startTime.get()) /  1000;
-                                finalizeChats(userMessage, chatSession, fullResponseBuffer.toString(), duration, usageRef.get());
+                                finalizeChats(userMessage, chatSession, fullResponseBuffer.toString(), duration, usageRef.get(), userId);
                         }
                     );
                     }
@@ -108,7 +111,7 @@ public class AiGenerationServiceImpl implements AiGenerationService {
                 });
     }
 
-    private void finalizeChats(String userMessage, ChatSession chatSession, String fullText, Long duration, Usage usage) {
+    private void finalizeChats(String userMessage, ChatSession chatSession, String fullText, Long duration, Usage usage, Long userId) {
         Long projectId = chatSession.getId().getProjectId();
 
         if(usage != null) {
@@ -138,6 +141,7 @@ public class AiGenerationServiceImpl implements AiGenerationService {
         List<ChatEvent> chatEventList = llmResponseParser.parseChatEvents(fullText, assistantChatMessage);
         chatEventList.addFirst(ChatEvent.builder()
                 .type(ChatEventType.THOUGHT)
+                .status(ChatEventStatus.CONFIRMED)
                 .chatMessage(assistantChatMessage)
                 .content("Thought for "+duration+"s")
                 .sequenceOrder(0)
@@ -146,7 +150,17 @@ public class AiGenerationServiceImpl implements AiGenerationService {
         chatEventList.stream()
                 .filter(e -> e.getType() == ChatEventType.FILE_EDIT)
                 .forEach(e -> {
-//                    projectFileService.saveFile(projectId, e.getFilePath(), e.getContent()) TODO: kafka
+                    String sagaId= UUID.randomUUID().toString();
+                    e.setSagaId(sagaId);
+                    FileStoreRequestEvent fileStoreRequestEvent=new FileStoreRequestEvent(
+                            projectId,
+                            sagaId,
+                            e.getFilePath(),
+                            e.getContent(),
+                            userId
+                    );
+                    log.info("Storage request event sent: {}", e.getFilePath());
+                    kafkaTemplate.send("file-storage-request-event", "project-"+projectId, fileStoreRequestEvent);
                 });
 
         chatEventRepository.saveAll(chatEventList);
@@ -164,24 +178,5 @@ public class AiGenerationServiceImpl implements AiGenerationService {
             chatSession = chatSessionRepository.save(chatSession);
         }
         return chatSession;
-    }
-
-    private String getCurrentAuthorization() {
-
-        ServletRequestAttributes attributes =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-
-        if (attributes == null) {
-            throw new IllegalStateException("No current HTTP request found");
-        }
-
-        String authorization =
-                attributes.getRequest().getHeader("Authorization");
-
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
-            throw new IllegalStateException("Authorization header is missing");
-        }
-
-        return authorization;
     }
 }
