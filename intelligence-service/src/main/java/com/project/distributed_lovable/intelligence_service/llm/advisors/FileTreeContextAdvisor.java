@@ -30,11 +30,15 @@ public class FileTreeContextAdvisor implements StreamAdvisor {
     public Flux<ChatClientResponse> adviseStream(ChatClientRequest chatClientRequest, StreamAdvisorChain streamAdvisorChain) {
         Map<String, Object> context= chatClientRequest.context();
         Long projectId=Long.parseLong(context.getOrDefault("projectId", 0).toString());
-        ChatClientRequest augmentedChatClientRequest = augmentedRequestWithFileTree(chatClientRequest, projectId);
+        String accessToken = (String) context.get("accessToken");
+        if (accessToken == null || accessToken.isBlank()) {
+            throw new IllegalStateException("Access token not found in ChatClient context");
+        }
+        ChatClientRequest augmentedChatClientRequest = augmentedRequestWithFileTree(chatClientRequest, projectId, accessToken);
         return streamAdvisorChain.nextStream(augmentedChatClientRequest);
     }
 
-    private ChatClientRequest augmentedRequestWithFileTree(ChatClientRequest chatClientRequest, Long projectId) {
+    private ChatClientRequest augmentedRequestWithFileTree(ChatClientRequest chatClientRequest, Long projectId, String accessToken) {
 
         List<Message> incomingMessages = chatClientRequest.prompt().getInstructions();
 
@@ -54,7 +58,12 @@ public class FileTreeContextAdvisor implements StreamAdvisor {
             allMessages.add(systemMessage);
         }
 
-        List<FileNode> fileTree=workspaceClient.getFileTree(projectId).files();
+//        List<FileNode> fileTree=workspaceClient.getFileTree(projectId).files();
+        /*
+         * Pass the JWT received from the ChatClient context
+         * to the Workspace Service.
+         */
+        List<FileNode> fileTree = workspaceClient.getFileTree(projectId, "Bearer " + accessToken).files();
         String fileTreeContext="\n\n ----- FILE_TREE ----- \n"+fileTree.toString();
         allMessages.add(new SystemMessage(fileTreeContext));
 

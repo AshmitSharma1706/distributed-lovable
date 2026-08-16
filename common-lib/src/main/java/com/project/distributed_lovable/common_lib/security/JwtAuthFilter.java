@@ -15,7 +15,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
-@Component
 @Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
@@ -36,7 +35,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 return;
             }
 
-            String token = requestHeaderToken.split("Bearer ")[1];
+            String token = requestHeaderToken.substring(7);
             JwtUserPrincipal user=authUtil.verifyAccessToken(token);
             if(user!=null && SecurityContextHolder.getContext().getAuthentication()==null){
                 UsernamePasswordAuthenticationToken authenticationToken=new UsernamePasswordAuthenticationToken(
