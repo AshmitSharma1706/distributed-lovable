@@ -3,7 +3,7 @@ spring:
     name: account-service
 
   config:
-    import: configserver:http://localhost:8888
+    import: configserver:${CONFIG_SERVER_URL:http://localhost:8888}
 
 client:
   url: http://localhost:8080
