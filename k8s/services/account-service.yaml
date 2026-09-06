@@ -47,11 +47,11 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: STRIPE_API_KEY
-            - name: STRIPE_WEBHOOK_SECRET   
+            - name: STRIPE_WEBHOOK_KEY
               valueFrom:
                 secretKeyRef:
                   name: app-secrets
-                  key: STRIPE_WEBHOOK_SECRET
+                  key: STRIPE_WEBHOOK_KEY
             - name: FRONTEND_URL
               valueFrom:
                 configMapKeyRef:
