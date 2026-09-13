@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: lovable-proxy
-          image: ashmitsharma317/lovable-proxy:latest
+          image: ashmitsharma317/lovable-proxy:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 80
@@ -40,11 +40,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: lovable-me-proxy
+  name: lovable-proxy
   namespace: lovable-core
 spec:
   selector:
-    app: lovable-me-proxy
+    app: lovable-proxy
   ports:
     - port: 80
       targetPort: 80
