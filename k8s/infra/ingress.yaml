@@ -40,7 +40,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: lovable-me-proxy
+            name: lovable-proxy
             port:
               number: 80
   
