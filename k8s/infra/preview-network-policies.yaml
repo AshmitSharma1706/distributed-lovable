@@ -13,7 +13,7 @@ spec:
   
   # --- INCOMING TRAFFIC (Ingress) ---
   ingress:
-    # 1. ONLY accept traffic from the lovable-me-proxy
+    # 1. ONLY accept traffic from the lovable-proxy
     - from:
         - namespaceSelector:
             matchLabels:
