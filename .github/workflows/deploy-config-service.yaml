@@ -9,6 +9,7 @@ on:
 
 env:
   SERVICE_NAME: config-server
+  GKE_SERVICE_NAME: config-service
   IMAGE_NAME: ashmitsharma317/lovable-distributed-config-service
 
 permissions:
@@ -54,8 +55,8 @@ jobs:
 
       - name: Deploy to GKE
         run: |
-          kubectl set image deployment/${{ env.SERVICE_NAME }} \
+          kubectl set image deployment/${{ env.GKE_SERVICE_NAME }} \
           ${{ env.SERVICE_NAME }}=${{ env.IMAGE_NAME }}:${{ github.sha }} \
           -n lovable-core
           
-          kubectl rollout status deployment/${{ env.SERVICE_NAME }} -n lovable-core
+          kubectl rollout status deployment/${{ env.GKE_SERVICE_NAME }} -n lovable-core
