@@ -8,7 +8,7 @@ on:
       - 'config-server/**'
 
 env:
-  SERVICE_NAME: config-service
+  SERVICE_NAME: config-server
   IMAGE_NAME: ashmitsharma317/lovable-distributed-config-service
 
 permissions:
