@@ -21,7 +21,6 @@ management:
     config:
       enabled: false
 
-
 ---
 
 spring:
