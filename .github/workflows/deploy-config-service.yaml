@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'config-service/**'
+      - 'config-server/**'
 
 env:
   SERVICE_NAME: config-service
