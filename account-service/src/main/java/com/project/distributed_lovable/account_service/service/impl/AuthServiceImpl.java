@@ -35,27 +35,27 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse signup(SignupRequest request) {
         userRepository.findByUsername(request.username()).ifPresent(user -> {
-            throw  new BadRequestException("User already exists with username: "+request.username());
+            throw new BadRequestException("User already exists with username: " + request.username());
         });
 
-        User user=userMapper.toEntity(request);
+        User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(request.password()));
-        user= userRepository.save(user);
+        user = userRepository.save(user);
 
-        JwtUserPrincipal jwtUserPrincipal=new JwtUserPrincipal(user.getId(), user.getName(),
+        JwtUserPrincipal jwtUserPrincipal = new JwtUserPrincipal(user.getId(), user.getName(),
                 user.getUsername(), null, new ArrayList<>());
 
-        String token= authUtil.generateAccessToken(jwtUserPrincipal);
+        String token = authUtil.generateAccessToken(jwtUserPrincipal);
         return new AuthResponse(token, userMapper.toUserProfileResponse(jwtUserPrincipal));
     }
 
     @Override
     public AuthResponse login(LoginRequest request) {
-        Authentication authentication= authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.username(),request.password())
-        );
-        JwtUserPrincipal user=(JwtUserPrincipal) authentication.getPrincipal();
-        String token= authUtil.generateAccessToken(user);
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+
+        JwtUserPrincipal user = (JwtUserPrincipal) authentication.getPrincipal();
+        String token = authUtil.generateAccessToken(user);
         return new AuthResponse(token, userMapper.toUserProfileResponse(user));
     }
 }

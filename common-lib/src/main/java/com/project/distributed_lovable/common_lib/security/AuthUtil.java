@@ -1,6 +1,5 @@
 package com.project.distributed_lovable.common_lib.security;
 
-import com.project.distributed_lovable.common_lib.dto.UserDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -23,24 +22,25 @@ public class AuthUtil {
 
     public SecretKey getSecretKey() {
         if (jwtSecretKey == null || jwtSecretKey.isBlank()) {
-            throw new IllegalStateException("JWT secret key is not configured. Please define 'jwt.secret-key' or 'jwt.secretkey'.");
+            throw new IllegalStateException(
+                    "JWT secret key is not configured. Please define 'jwt.secret-key' or 'jwt.secretkey'.");
         }
         return Keys.hmacShaKeyFor((jwtSecretKey.getBytes(StandardCharsets.UTF_8)));
     }
 
-    public String generateAccessToken(JwtUserPrincipal user){
+    public String generateAccessToken(JwtUserPrincipal user) {
         return Jwts.builder()
                 .subject(user.username())
                 .claim("userId", user.userId().toString())
                 .claim("name", user.name())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000*60*100))
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 100))
                 .signWith(getSecretKey())
                 .compact();
     }
 
-    public JwtUserPrincipal verifyAccessToken(String token){
-        Claims claims=Jwts.parser()
+    public JwtUserPrincipal verifyAccessToken(String token) {
+        Claims claims = Jwts.parser()
                 .verifyWith(getSecretKey())
                 .build()
                 .parseSignedClaims(token)
@@ -61,9 +61,9 @@ public class AuthUtil {
         return new JwtUserPrincipal(userId, name, username, null, new ArrayList<>());
     }
 
-    public Long getCurrentUserId(){
-        Authentication authentication= SecurityContextHolder.getContext().getAuthentication();
-        if(authentication==null || !(authentication.getPrincipal() instanceof JwtUserPrincipal userPrincipal)){
+    public Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof JwtUserPrincipal userPrincipal)) {
             throw new AuthenticationCredentialsNotFoundException("No JWT found");
         }
         return userPrincipal.userId();

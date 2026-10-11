@@ -1,7 +1,6 @@
 package com.project.distributed_lovable.workspace_service.controller;
 
 import com.project.distributed_lovable.common_lib.dto.FileTreeDto;
-import com.project.distributed_lovable.workspace_service.dto.project.FileContentResponse;
 import com.project.distributed_lovable.workspace_service.service.ProjectFileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +21,7 @@ public class FileController {
     @GetMapping("/content") // /src/hooks/get-user-hook.jsx
     public ResponseEntity<String> getFile(
             @PathVariable Long projectId,
-            @RequestParam String path
-    ) {
+            @RequestParam String path) {
         return ResponseEntity.ok(projectFileService.getFileContent(projectId, path));
     }
 

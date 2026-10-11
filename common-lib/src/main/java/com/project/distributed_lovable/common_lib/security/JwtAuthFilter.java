@@ -10,11 +10,11 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
+
 @Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
@@ -27,8 +27,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+            FilterChain filterChain) throws ServletException, IOException {
 
         final String requestURI = request.getRequestURI();
         final String method = request.getMethod();
@@ -52,12 +51,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             JwtUserPrincipal user = authUtil.verifyAccessToken(token);
 
             if (user != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(
-                                user,
-                                token,
-                                user.authorities()
-                        );
+                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                        user,
+                        token,
+                        user.authorities());
 
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 log.info("Authentication established: userId={}, username='{}' for [{}] {}",
@@ -71,8 +68,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 response.setContentType("application/json");
                 response.getWriter().write(String.format(
                         "{\"status\":\"UNAUTHORIZED\",\"message\":\"Authentication failed: %s\"}",
-                        e.getMessage() != null ? e.getMessage().replace("\"", "\\\"") : "Invalid token"
-                ));
+                        e.getMessage() != null ? e.getMessage().replace("\"", "\\\"") : "Invalid token"));
             }
             return;
         }
@@ -89,8 +85,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 response.setContentType("application/json");
                 response.getWriter().write(String.format(
                         "{\"status\":\"INTERNAL_SERVER_ERROR\",\"message\":\"Internal server error: %s\"}",
-                        e.getMessage() != null ? e.getMessage().replace("\"", "\\\"") : "Unexpected error"
-                ));
+                        e.getMessage() != null ? e.getMessage().replace("\"", "\\\"") : "Unexpected error"));
             }
         }
     }
