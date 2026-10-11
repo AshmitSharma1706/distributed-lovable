@@ -18,10 +18,13 @@ import java.util.Date;
 @Component
 public class AuthUtil {
 
-    @Value("${jwt.secret-key}")
+    @Value("${jwt.secret-key:${jwt.secretkey:}}")
     private String jwtSecretKey;
 
     public SecretKey getSecretKey() {
+        if (jwtSecretKey == null || jwtSecretKey.isBlank()) {
+            throw new IllegalStateException("JWT secret key is not configured. Please define 'jwt.secret-key' or 'jwt.secretkey'.");
+        }
         return Keys.hmacShaKeyFor((jwtSecretKey.getBytes(StandardCharsets.UTF_8)));
     }
 
@@ -43,9 +46,18 @@ public class AuthUtil {
                 .parseSignedClaims(token)
                 .getPayload();
 
-        Long userId=Long.parseLong(claims.get("userId", String.class));
+        Object rawUserId = claims.get("userId");
+        Long userId;
+        if (rawUserId instanceof Number num) {
+            userId = num.longValue();
+        } else if (rawUserId != null) {
+            userId = Long.parseLong(rawUserId.toString());
+        } else {
+            throw new IllegalArgumentException("JWT missing required 'userId' claim");
+        }
+
         String name = claims.get("name", String.class);
-        String username= claims.getSubject();
+        String username = claims.getSubject();
         return new JwtUserPrincipal(userId, name, username, null, new ArrayList<>());
     }
 

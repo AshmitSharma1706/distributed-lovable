@@ -143,8 +143,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public PlanDto getCurrentSubscribedPlanByUser() {
-        SubscriptionResponse subscriptionResponse=getCurrentSubscription();
-        return subscriptionResponse.plan();
+        SubscriptionResponse subscriptionResponse = getCurrentSubscription();
+        if (subscriptionResponse != null && subscriptionResponse.plan() != null) {
+            return subscriptionResponse.plan();
+        }
+        return new PlanDto(0L, "Free", FREE_TIER_PROJECTS_ALLOWED, 10000, false, "0");
     }
 
     private User getUser(Long userId){

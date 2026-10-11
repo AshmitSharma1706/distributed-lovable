@@ -6,14 +6,17 @@ import com.project.distributed_lovable.workspace_service.dto.project.ProjectResp
 import com.project.distributed_lovable.workspace_service.dto.project.ProjectSummaryResponse;
 import com.project.distributed_lovable.workspace_service.service.DeploymentService;
 import com.project.distributed_lovable.workspace_service.service.ProjectService;
+import com.project.distributed_lovable.common_lib.security.AuthUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/projects")
 @RequiredArgsConstructor
@@ -21,10 +24,15 @@ public class ProjectController {
 
     private final ProjectService projectService;
     private final DeploymentService deploymentService;
+    private final AuthUtil authUtil;
 
     @PostMapping("/create")
     public ResponseEntity<ProjectResponse> createProject(@RequestBody @Valid ProjectRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(projectService.createProject(request));
+        Long userId = authUtil.getCurrentUserId();
+        log.info("Project creation request received: name='{}', authenticatedUserId={}", request.name(), userId);
+        ProjectResponse response = projectService.createProject(request);
+        log.info("Project created successfully: projectId={}, name='{}', userId={}", response.id(), response.name(), userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping

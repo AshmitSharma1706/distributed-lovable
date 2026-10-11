@@ -1,6 +1,7 @@
 package com.project.distributed_lovable.common_lib.error;
 
 
+import feign.FeignException;
 import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -68,5 +69,26 @@ public class GlobalExceptionHandler {
         ApiError apiError = new ApiError( HttpStatus.FORBIDDEN, "Access denied: Insufficient permissions");
         log.error(apiError.toString(), ex);
         return ResponseEntity.status(apiError.status()).body(apiError);
+    }
+
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<ApiError> handleFeignException(FeignException ex) {
+        ApiError apiError = new ApiError(HttpStatus.BAD_GATEWAY, "Downstream service error: " + ex.getMessage());
+        log.error("Feign exception communicating with downstream service: status={}, message={}", ex.status(), ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(apiError);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiError> handleIllegalArgumentException(IllegalArgumentException ex) {
+        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
+        log.error("Illegal argument error: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiError);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleGenericException(Exception ex) {
+        ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred: " + ex.getMessage());
+        log.error("Unhandled internal server error: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiError);
     }
 }

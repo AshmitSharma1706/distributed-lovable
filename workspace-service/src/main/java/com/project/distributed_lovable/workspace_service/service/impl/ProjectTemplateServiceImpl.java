@@ -36,6 +36,24 @@ public class ProjectTemplateServiceImpl implements ProjectTemplateService {
                 .orElseThrow( () -> new ResourceNotFoundException("Project",projectId.toString()));
 
         try{
+            boolean targetExists = minioClient.bucketExists(
+                    BucketExistsArgs.builder().bucket(TARGET_BUCKET).build()
+            );
+            if (!targetExists) {
+                log.info("Target bucket '{}' not found in MinIO; creating it...", TARGET_BUCKET);
+                minioClient.makeBucket(MakeBucketArgs.builder().bucket(TARGET_BUCKET).build());
+                log.info("Target bucket '{}' created successfully", TARGET_BUCKET);
+            }
+
+            boolean templateExists = minioClient.bucketExists(
+                    BucketExistsArgs.builder().bucket(TEMPLATE_BUCKET).build()
+            );
+            if (!templateExists) {
+                log.warn("Template bucket '{}' not found in MinIO; creating it and skipping template copying", TEMPLATE_BUCKET);
+                minioClient.makeBucket(MakeBucketArgs.builder().bucket(TEMPLATE_BUCKET).build());
+                return;
+            }
+
             Iterable<Result<Item>> results= minioClient.listObjects(
                     ListObjectsArgs.builder()
                             .bucket(TEMPLATE_BUCKET)
@@ -50,6 +68,9 @@ public class ProjectTemplateServiceImpl implements ProjectTemplateService {
                 String sourceKey=item.objectName();
 
                 String cleanPath=sourceKey.replaceFirst(TEMPLATE_NAME + "/","");
+                if (cleanPath.isEmpty() || cleanPath.endsWith("/")) {
+                    continue;
+                }
                 String destinationKey= projectId + "/" + cleanPath;
 
                 minioClient.copyObject(
@@ -75,9 +96,17 @@ public class ProjectTemplateServiceImpl implements ProjectTemplateService {
 
                 filesToSave.add(projectFile);
             }
-            projectFileRepository.saveAll(filesToSave);
+
+            if (!filesToSave.isEmpty()) {
+                projectFileRepository.saveAll(filesToSave);
+                log.info("Copied {} template files to project ID: {}", filesToSave.size(), projectId);
+            } else {
+                log.warn("Template '{}' had no objects in bucket '{}'; no template files copied for project ID: {}",
+                        TEMPLATE_NAME, TEMPLATE_BUCKET, projectId);
+            }
         }
         catch (Exception e){
+            log.error("Failed to initialize project from template for projectId {}: {}", projectId, e.getMessage(), e);
             throw new RuntimeException("Failed to initialize project from template", e);
         }
     }

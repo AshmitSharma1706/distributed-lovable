@@ -39,9 +39,11 @@ public class WorkspaceSecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(exceptionHandlingConfigurer ->
-                        exceptionHandlingConfigurer.accessDeniedHandler((request, response, accessDeniedException) ->
-                                handlerExceptionResolver.resolveException(request,response,null,accessDeniedException)));
+                .exceptionHandling(exceptionHandlingConfigurer -> exceptionHandlingConfigurer
+                        .authenticationEntryPoint((request, response, authException) ->
+                                handlerExceptionResolver.resolveException(request, response, null, authException))
+                        .accessDeniedHandler((request, response, accessDeniedException) ->
+                                handlerExceptionResolver.resolveException(request, response, null, accessDeniedException)));
 
         return httpSecurity.build();
     }
