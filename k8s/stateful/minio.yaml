@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: minio
-          image: quay.io/minio/minio:latest
+          image: ashmitsharma317/minio:RELEASE-2025-09-07
           imagePullPolicy: IfNotPresent
           args: [server, /data, --console-address, ":9001"]
           ports:
