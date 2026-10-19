@@ -13,6 +13,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.server.ServerWebExchange;
@@ -34,6 +35,12 @@ public class GatewayJwtAuthFilter implements GatewayFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request=exchange.getRequest();
         String path=request.getURI().getPath();
+
+        // Allow CORS preflight requests to pass through without JWT validation
+        if (request.getMethod() == HttpMethod.OPTIONS) {
+            log.info("CORS preflight request, Continue: {}", path);
+            return chain.filter(exchange);
+        }
 
         boolean isPublic=securityProperties.getPublicRoutes().stream()
                 .anyMatch(pattern -> pathMatcher.match(pattern,path));
