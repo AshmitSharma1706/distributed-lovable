@@ -51,7 +51,14 @@ spec:
             initialDelaySeconds: 90
             periodSeconds: 15
             timeoutSeconds: 5
-            failureThreshold: 3
+          volumeMounts:
+            - name: cors-config-class
+              mountPath: /app/classes/com/project/distributed_lovable/api_gateway/config/CorsConfig.class
+              subPath: CorsConfig.class
+      volumes:
+        - name: cors-config-class
+          configMap:
+            name: api-gateway-cors-class
 ---
 apiVersion: v1
 kind: Service

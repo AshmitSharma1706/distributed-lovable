@@ -178,6 +178,9 @@ Changes not staged for commit:
 	modified:   workspace-service/src/main/java/com/project/distributed_lovable/workspace_service/service/impl/KubernetesDeploymentServiceImpl.java
 	modified:   workspace-service/src/main/java/com/project/distributed_lovable/workspace_service/service/impl/ProjectFileServiceImpl.java
 
+	modified:   api-gateway/src/main/java/com/project/distributed_lovable/api_gateway/config/CorsConfig.java
+	modified:   k8s/services/api-gateway.yaml
+
 Untracked files:
 	reports/final-resolution-and-validation.md
 	workspace-service/src/test/java/com/project/distributed_lovable/workspace_service/controller/FileControllerTest.java
