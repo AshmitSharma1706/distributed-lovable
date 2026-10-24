@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: lovable-ui
-          image: ashmitsharma317/lovable-ui:1.0.2
+          image: ashmitsharma317/lovable-ui:1.0.4
           imagePullPolicy: Always
           ports:
             - containerPort: 80
