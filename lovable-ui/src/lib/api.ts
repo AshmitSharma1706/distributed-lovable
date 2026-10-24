@@ -13,7 +13,19 @@ import {
   AuthResponse,
 } from "./types";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://api.codingshuttle.in";
+const getBaseUrl = (): string => {
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    if (hostname.includes("sslip.io")) {
+      const parts = hostname.split(".");
+      const baseDomain = parts.slice(-3).join(".");
+      return `${window.location.protocol}//api.${baseDomain}`;
+    }
+  }
+  return import.meta.env.VITE_API_URL || "http://api.codingshuttle.in";
+};
+
+const BASE_URL = getBaseUrl();
 
 export const getAuthToken = () => localStorage.getItem("auth_token");
 

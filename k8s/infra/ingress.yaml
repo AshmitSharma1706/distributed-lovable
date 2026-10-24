@@ -32,6 +32,42 @@ spec:
             port:
               number: 80
 
+  - host: "app.34-93-185-166.sslip.io"
+    http:
+      paths:
+      - path: /api/
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway
+            port:
+              number: 80
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: lovable-frontend
+            port:
+              number: 80
+
+  - host: "34-93-185-166.sslip.io"
+    http:
+      paths:
+      - path: /api/
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway
+            port:
+              number: 80
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: lovable-frontend
+            port:
+              number: 80
+
   # 2. Previews Route
   - host: "*.previews.codingshuttle.in"
     http:
@@ -57,6 +93,17 @@ spec:
   
   # 3. API Gateway Route
   - host: "api.codingshuttle.in"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway
+            port:
+              number: 80
+
+  - host: "api.34-93-185-166.sslip.io"
     http:
       paths:
       - path: /
