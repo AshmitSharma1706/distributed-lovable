@@ -50,15 +50,15 @@ export default function Signup() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <div className="min-h-screen flex items-center justify-center p-3 sm:p-4 bg-background overflow-x-hidden">
             {/* Background gradient */}
-            <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-1/3 left-1/3 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
             </div>
 
-            <div className="relative w-full max-w-md">
+            <div className="relative w-full max-w-md mx-auto">
                 {/* Card */}
-                <div className="bg-card border border-border/50 rounded-2xl p-8 shadow-2xl">
+                <div className="bg-card border border-border/50 rounded-2xl p-6 sm:p-8 shadow-2xl">
                     {/* Logo */}
                     <div className="text-center mb-8">
                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary/20 mb-5">

@@ -1,6 +1,21 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Code, Sparkles, LogOut, RotateCcw, Maximize2, RefreshCw, MoreVertical, Trash, Download, Edit } from "lucide-react";
+import { 
+  Code, 
+  Sparkles, 
+  LogOut, 
+  RotateCcw, 
+  Maximize2, 
+  RefreshCw, 
+  MoreVertical, 
+  Trash, 
+  Download, 
+  Edit,
+  ArrowLeft,
+  MessageSquare,
+  Eye,
+  Share2
+} from "lucide-react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { ChatPanel, ChatMessage } from "@/components/ChatPanel";
 import { CodePanel } from "@/components/CodePanel";
@@ -8,7 +23,7 @@ import { PreviewPanel } from "@/components/PreviewPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { api, isAuthenticated, removeAuthToken, getUserInfo, removeUserInfo } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,6 +34,7 @@ import { ProjectResponse } from "@/lib/types";
 import { ShareDialog } from "@/components/ShareDialog";
 
 type ViewMode = "code" | "preview";
+type MobileTab = "chat" | "preview" | "code";
 
 export function ProjectView() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -28,6 +44,7 @@ export function ProjectView() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("preview");
+  const [mobileTab, setMobileTab] = useState<MobileTab>("chat");
   const [updatedFiles, setUpdatedFiles] = useState<Map<string, string>>(new Map());
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [runtimeError, setRuntimeError] = useState<RuntimeError | null>(null);
@@ -219,6 +236,7 @@ Please analyze this error and fix the code to resolve it.`;
 
     handleSendMessage(prompt);
     setRuntimeError(null);
+    setMobileTab("chat");
   }, [handleSendMessage]);
 
   const handleDeleteProject = async () => {
@@ -286,29 +304,46 @@ Please analyze this error and fix the code to resolve it.`;
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
       {/* Header */}
-      <header className="h-12 shrink-0 border-b border-border/50 bg-panel flex items-center justify-between px-3">
-        <div className="flex items-center gap-2">
+      <header className="h-12 shrink-0 border-b border-border/50 bg-panel flex items-center justify-between px-2 sm:px-4">
+        {/* Left: Back button + Project Name + Rename/Delete Menu */}
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/projects")}
+            className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
+            title="Back to Projects"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+
           {project ? (
-            <>
+            <div className="flex items-center gap-2 min-w-0">
               <div
-                className="w-7 h-7 rounded-sm shadow-sm"
+                className="w-6 h-6 sm:w-7 sm:h-7 rounded-sm shadow-sm shrink-0"
                 style={generateGradient(project.name)}
               />
-              <span className="font-semibold text-sm">{project.name}</span>
-            </>
+              <span className="font-semibold text-xs sm:text-sm truncate max-w-[110px] sm:max-w-[180px] md:max-w-none">
+                {project.name}
+              </span>
+            </div>
           ) : (
-            <>
-              <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
               </div>
-              <span className="font-semibold text-sm">Loading...</span>
-            </>
+              <span className="font-semibold text-xs sm:text-sm">Loading...</span>
+            </div>
           )}
-          <span className="text-muted-foreground text-xs ml-2">Previewing last saved version</span>
+
+          <span className="text-muted-foreground text-xs ml-1 hidden xl:inline-block">
+            Previewing last saved version
+          </span>
+
           {project?.role !== 'VIEWER' && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 text-muted-foreground">
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground shrink-0">
                   <MoreVertical className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -330,38 +365,38 @@ Please analyze this error and fix the code to resolve it.`;
           )}
         </div>
 
-        <div className="flex items-center gap-1">
-          
-
-          {/* View Mode Toggle */}
-          <div className="flex items-center bg-muted/30 rounded-lg p-0.5 mx-2">
-            <button
-              onClick={() => setViewMode("preview")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all rounded-md ${viewMode === "preview"
-                ? "bg-primary text-primary-foreground"
+        {/* Center: Desktop View Mode Toggle (Preview | Code) */}
+        <div className="hidden lg:flex items-center bg-muted/30 rounded-lg p-0.5 mx-2">
+          <button
+            onClick={() => setViewMode("preview")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all rounded-md ${
+              viewMode === "preview"
+                ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
-                }`}
-            >
-              <Sparkles className="w-3 h-3" />
-              Preview
-            </button>
-            <button
-              onClick={() => setViewMode("code")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all rounded-md ${viewMode === "code"
-                ? "bg-primary text-primary-foreground"
+            }`}
+          >
+            <Sparkles className="w-3 h-3" />
+            Preview
+          </button>
+          <button
+            onClick={() => setViewMode("code")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all rounded-md ${
+              viewMode === "code"
+                ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
-                }`}
-            >
-              <Code className="w-3 h-3" />
-              Code
-            </button>
-          </div>
+            }`}
+          >
+            <Code className="w-3 h-3" />
+            Code
+          </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Right Actions */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Desktop User Info & Role */}
           {project && (
-            <div className="flex items-center gap-2 px-2 py-1 bg-muted/30 rounded-full border border-border/50">
-              <Avatar className="h-6 w-6 border border-primary/20">
+            <div className="hidden md:flex items-center gap-2 px-2 py-1 bg-muted/30 rounded-full border border-border/50">
+              <Avatar className="h-5 w-5 sm:h-6 sm:w-6 border border-primary/20">
                 <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-semibold">
                   {(() => {
                     const userInfo = getUserInfo();
@@ -385,37 +420,86 @@ Please analyze this error and fix the code to resolve it.`;
             </div>
           )}
 
+          {/* Share Button */}
           <ShareDialog
             projectId={projectId}
             trigger={
-              <Button variant="outline" size="sm" className="h-8 text-xs font-medium" disabled={project?.role === 'VIEWER'}>
-                Share
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-7 sm:h-8 px-2 sm:px-3 text-xs font-medium gap-1" 
+                disabled={project?.role === 'VIEWER'}
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Share</span>
               </Button>
             }
           />
+
+          {/* Desktop Upgrade & Publish buttons */}
           {project?.role !== 'VIEWER' && (
-            <>
+            <div className="hidden sm:flex items-center gap-1.5">
               <Button variant="outline" size="sm" className="h-8 text-xs">
                 Upgrade
               </Button>
               <Button size="sm" className="h-8 text-xs bg-primary hover:bg-primary/90">
                 Publish
               </Button>
-            </>
+            </div>
           )}
+
+          {/* Desktop Logout Button */}
           <Button
             variant="ghost"
             size="icon"
             onClick={handleLogout}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            className="hidden sm:flex h-8 w-8 text-muted-foreground hover:text-foreground"
+            title="Log out"
           >
             <LogOut className="w-4 h-4" />
           </Button>
+
+          {/* Mobile User & Options Menu */}
+          <div className="sm:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full p-0">
+                  <Avatar className="h-6 w-6">
+                    <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-bold">
+                      {getUserInfo()?.name ? getUserInfo()?.name.charAt(0).toUpperCase() : "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <div className="p-2 border-b border-border/50">
+                  <p className="text-xs font-medium truncate">{getUserInfo()?.name || "User"}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{getUserInfo()?.username || ""}</p>
+                  {project?.role && (
+                    <span className="inline-block mt-1 text-[9px] uppercase px-1 py-0.5 rounded bg-primary/10 text-primary font-bold">
+                      {project.role}
+                    </span>
+                  )}
+                </div>
+                <DropdownMenuItem onClick={openRenameDialog}>
+                  <Edit className="w-4 h-4 mr-2" /> Rename Project
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadProject}>
+                  <Download className="w-4 h-4 mr-2" /> Download Zip
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                  <LogOut className="w-4 h-4 mr-2" /> Log Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
+      {/* Main Content Area */}
+      {/* 1. DESKTOP LAYOUT (>= 1024px): Resizable Side-by-Side Panels */}
+      <div className="hidden lg:flex flex-1 overflow-hidden">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* Chat Panel */}
           <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
@@ -434,23 +518,102 @@ Please analyze this error and fix the code to resolve it.`;
 
           {/* Code/Preview Panel */}
           <ResizablePanel defaultSize={65} minSize={50} maxSize={75}>
-            <div className="h-full">
-              <div className="h-full relative">
-                <div className={cn("h-full absolute inset-0", viewMode !== "code" && "hidden")}>
-                  <CodePanel projectId={projectId} updatedFiles={updatedFiles} />
-                </div>
-                <div className={cn("h-full absolute inset-0", viewMode !== "preview" && "hidden")}>
-                  <PreviewPanel
-                    projectId={projectId}
-                    runtimeError={runtimeError}
-                    onDismiss={() => setRuntimeError(null)}
-                    onFix={handleFixError}
-                  />
-                </div>
+            <div className="h-full relative">
+              <div className={cn("h-full absolute inset-0", viewMode !== "code" && "hidden")}>
+                <CodePanel projectId={projectId} updatedFiles={updatedFiles} />
+              </div>
+              <div className={cn("h-full absolute inset-0", viewMode !== "preview" && "hidden")}>
+                <PreviewPanel
+                  projectId={projectId}
+                  runtimeError={runtimeError}
+                  onDismiss={() => setRuntimeError(null)}
+                  onFix={handleFixError}
+                />
               </div>
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
+      </div>
+
+      {/* 2. MOBILE / TABLET LAYOUT (< 1024px): Fullscreen Tabbed Panels + Bottom Nav */}
+      <div className="flex lg:hidden flex-1 flex-col overflow-hidden relative">
+        {/* Active Panel View */}
+        <div className="flex-1 overflow-hidden relative">
+          <div className={cn("h-full w-full absolute inset-0", mobileTab !== "chat" && "hidden")}>
+            <ChatPanel
+              messages={messages}
+              onSendMessage={handleSendMessage}
+              isStreaming={isStreaming}
+              isLoading={isLoadingHistory}
+              readOnly={project?.role === 'VIEWER'}
+            />
+          </div>
+          <div className={cn("h-full w-full absolute inset-0", mobileTab !== "preview" && "hidden")}>
+            <PreviewPanel
+              projectId={projectId}
+              runtimeError={runtimeError}
+              onDismiss={() => setRuntimeError(null)}
+              onFix={handleFixError}
+            />
+          </div>
+          <div className={cn("h-full w-full absolute inset-0", mobileTab !== "code" && "hidden")}>
+            <CodePanel projectId={projectId} updatedFiles={updatedFiles} />
+          </div>
+        </div>
+
+        {/* Mobile Bottom Navigation Bar */}
+        <nav className="h-14 shrink-0 border-t border-border/50 bg-panel/95 backdrop-blur-md grid grid-cols-3 items-center px-2 z-30 select-none">
+          <button
+            onClick={() => setMobileTab("chat")}
+            className={cn(
+              "flex flex-col items-center justify-center h-full gap-1 transition-colors relative",
+              mobileTab === "chat" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <div className="relative">
+              <MessageSquare className="w-5 h-5" />
+              {isStreaming && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full animate-ping" />
+              )}
+            </div>
+            <span className="text-[11px] leading-none">
+              {isStreaming ? "Thinking..." : "Chat"}
+            </span>
+          </button>
+
+          <button
+            onClick={() => {
+              setMobileTab("preview");
+              setViewMode("preview");
+            }}
+            className={cn(
+              "flex flex-col items-center justify-center h-full gap-1 transition-colors relative",
+              mobileTab === "preview" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <div className="relative">
+              <Eye className="w-5 h-5" />
+              {runtimeError && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-destructive rounded-full" />
+              )}
+            </div>
+            <span className="text-[11px] leading-none">Preview</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setMobileTab("code");
+              setViewMode("code");
+            }}
+            className={cn(
+              "flex flex-col items-center justify-center h-full gap-1 transition-colors",
+              mobileTab === "code" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Code className="w-5 h-5" />
+            <span className="text-[11px] leading-none">Code</span>
+          </button>
+        </nav>
       </div>
 
       {/* Rename Dialog */}

@@ -90,8 +90,8 @@ export function ShareDialog({ projectId, trigger, open, onOpenChange }: ShareDia
     return (
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
             {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-            <DialogContent className="sm:max-w-md gap-0 p-0 overflow-hidden border-none shadow-2xl">
-                <div className="p-6 pb-4">
+            <DialogContent className="w-[95vw] sm:max-w-md gap-0 p-0 overflow-hidden border-none shadow-2xl">
+                <div className="p-4 sm:p-6 pb-4">
                     <DialogHeader className="mb-4">
                         <DialogTitle className="text-xl">Share project</DialogTitle>
                     </DialogHeader>

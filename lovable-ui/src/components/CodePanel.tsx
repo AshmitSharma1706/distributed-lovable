@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
+import { Folder, X, ChevronRight } from "lucide-react";
 import { FileTree } from "./FileTree";
 import { CodeEditor } from "./CodeEditor";
 import { FileTabs } from "./FileTabs";
+import { Button } from "@/components/ui/button";
 import { api, FileNode, OPEN_TABS_KEY, ACTIVE_TAB_KEY } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 interface CodePanelProps {
   projectId: string;
@@ -29,6 +32,7 @@ export function CodePanel({ projectId, updatedFiles }: CodePanelProps) {
   const [fileContent, setFileContent] = useState<string>("");
   const [isLoadingTree, setIsLoadingTree] = useState(true);
   const [isLoadingFile, setIsLoadingFile] = useState(false);
+  const [isMobileFileTreeOpen, setIsMobileFileTreeOpen] = useState(false);
 
   // Load tabs from localStorage
   useEffect(() => {
@@ -138,6 +142,7 @@ export function CodePanel({ projectId, updatedFiles }: CodePanelProps) {
       setOpenTabs((prev) => [...prev, path]);
     }
     setActiveTab(path);
+    setIsMobileFileTreeOpen(false);
   }, [openTabs]);
 
   const handleCloseTab = useCallback((path: string) => {
@@ -160,29 +165,83 @@ export function CodePanel({ projectId, updatedFiles }: CodePanelProps) {
   }, []);
 
   return (
-    <div className="flex h-full">
-      {/* File Tree */}
-      <div className="w-56 shrink-0 border-r border-border/50 overflow-y-auto bg-panel">
-        <div className="panel-header">
+    <div className="flex h-full relative overflow-hidden">
+      {/* 1. Desktop File Tree (hidden on mobile, visible on md+) */}
+      <div className="hidden md:flex w-56 shrink-0 border-r border-border/50 flex-col overflow-hidden bg-panel">
+        <div className="panel-header shrink-0">
           <span className="text-sm font-medium">Files</span>
         </div>
-        <FileTree
-          files={files}
-          selectedPath={activeTab}
-          onSelectFile={handleSelectFile}
-          isLoading={isLoadingTree}
-        />
+        <div className="flex-1 overflow-y-auto">
+          <FileTree
+            files={files}
+            selectedPath={activeTab}
+            onSelectFile={handleSelectFile}
+            isLoading={isLoadingTree}
+          />
+        </div>
       </div>
 
-      {/* Code Editor with Tabs */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* File Tabs */}
-        <FileTabs
-          openTabs={openTabs}
-          activeTab={activeTab}
-          onSelectTab={handleSelectTab}
-          onCloseTab={handleCloseTab}
-        />
+      {/* 2. Mobile File Tree Drawer Overlay (< md) */}
+      {isMobileFileTreeOpen && (
+        <div className="fixed inset-0 z-50 flex md:hidden">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsMobileFileTreeOpen(false)}
+          />
+
+          {/* Drawer content */}
+          <div className="relative w-72 max-w-[85vw] h-full bg-panel border-r border-border/50 flex flex-col shadow-2xl z-10 animate-fade-in">
+            <div className="h-12 border-b border-border/50 flex items-center justify-between px-4">
+              <div className="flex items-center gap-2">
+                <Folder className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold">Project Files</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsMobileFileTreeOpen(false)}
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2">
+              <FileTree
+                files={files}
+                selectedPath={activeTab}
+                onSelectFile={handleSelectFile}
+                isLoading={isLoadingTree}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Code Editor with Tabs */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* File Tabs & Mobile File Button */}
+        <div className="flex items-center border-b border-border/50 bg-panel shrink-0 min-w-0">
+          {/* Mobile File Browser Toggle Button */}
+          <button
+            onClick={() => setIsMobileFileTreeOpen(true)}
+            className="md:hidden flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-r border-border/40 text-muted-foreground hover:text-foreground hover:bg-muted/30 shrink-0"
+            title="Browse Files"
+          >
+            <Folder className="w-3.5 h-3.5 text-primary" />
+            <span>Files</span>
+          </button>
+
+          {/* Tabs */}
+          <div className="flex-1 min-w-0 overflow-x-auto scrollbar-none">
+            <FileTabs
+              openTabs={openTabs}
+              activeTab={activeTab}
+              onSelectTab={handleSelectTab}
+              onCloseTab={handleCloseTab}
+            />
+          </div>
+        </div>
         
         {/* Editor */}
         <div className="flex-1 overflow-hidden">

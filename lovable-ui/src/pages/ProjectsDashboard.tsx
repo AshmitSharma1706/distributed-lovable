@@ -143,12 +143,12 @@ export function ProjectsDashboard() {
         <div className="min-h-screen bg-background">
             {/* Header */}
             <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-8">
-                    <div className="flex items-center gap-2 font-bold text-lg">
-                        <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                            <Folder className="w-5 h-5 text-primary" />
+                <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-3 sm:px-8">
+                    <div className="flex items-center gap-2 font-bold text-base sm:text-lg">
+                        <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+                            <Folder className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                         </div>
-                        Project Companion
+                        <span className="truncate max-w-[190px] sm:max-w-none">Project Companion</span>
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -168,10 +168,10 @@ export function ProjectsDashboard() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
                             <div className="flex flex-col space-y-1 p-2">
-                                <p className="text-sm font-medium leading-none">
+                                <p className="text-sm font-medium leading-none truncate">
                                     {getUserInfo()?.name || "User"}
                                 </p>
-                                <p className="text-xs leading-none text-muted-foreground">
+                                <p className="text-xs leading-none text-muted-foreground truncate">
                                     {getUserInfo()?.username || ""}
                                 </p>
                             </div>
@@ -184,23 +184,23 @@ export function ProjectsDashboard() {
                 </div>
             </header>
 
-            <main className="container max-w-screen-2xl py-8 px-4 sm:px-8">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+            <main className="container max-w-screen-2xl py-6 sm:py-8 px-4 sm:px-8">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
-                        <p className="text-muted-foreground mt-1">
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Projects</h1>
+                        <p className="text-muted-foreground text-sm mt-1">
                             Manage and create your AI-powered projects
                         </p>
                     </div>
 
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button className="gap-2">
+                            <Button className="gap-2 w-full sm:w-auto">
                                 <Plus className="w-4 h-4" />
                                 New Project
                             </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="w-[95vw] max-w-md">
                             <DialogHeader>
                                 <DialogTitle>Create New Project</DialogTitle>
                                 <DialogDescription>
@@ -215,7 +215,7 @@ export function ProjectsDashboard() {
                                     onKeyDown={(e) => e.key === "Enter" && handleCreateProject()}
                                 />
                             </div>
-                            <DialogFooter>
+                            <DialogFooter className="flex-col sm:flex-row gap-2">
                                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                                     Cancel
                                 </Button>
@@ -229,7 +229,7 @@ export function ProjectsDashboard() {
 
                     {/* Rename Dialog */}
                     <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
-                        <DialogContent>
+                        <DialogContent className="w-[95vw] max-w-md">
                             <DialogHeader>
                                 <DialogTitle>Rename Project</DialogTitle>
                             </DialogHeader>
@@ -240,7 +240,7 @@ export function ProjectsDashboard() {
                                     onKeyDown={(e) => e.key === "Enter" && handleRenameSubmit()}
                                 />
                             </div>
-                            <DialogFooter>
+                            <DialogFooter className="flex-col sm:flex-row gap-2">
                                 <Button variant="outline" onClick={() => setIsRenameDialogOpen(false)}>Cancel</Button>
                                 <Button onClick={handleRenameSubmit} disabled={!renameName.trim() || renameName === projectToRename?.name}>
                                     Save
@@ -251,7 +251,7 @@ export function ProjectsDashboard() {
                 </div>
 
                 {/* Search */}
-                <div className="relative mb-8 max-w-md">
+                <div className="relative mb-6 sm:mb-8 w-full sm:max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                         placeholder="Search projects..."
@@ -267,17 +267,17 @@ export function ProjectsDashboard() {
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
                     </div>
                 ) : filteredProjects.length === 0 ? (
-                    <div className="text-center py-20 border border-dashed rounded-lg">
-                        <h3 className="text-lg font-semibold mb-2">No projects found</h3>
-                        <p className="text-muted-foreground mb-6">
+                    <div className="text-center py-16 sm:py-20 border border-dashed rounded-lg px-4">
+                        <h3 className="text-base sm:text-lg font-semibold mb-2">No projects found</h3>
+                        <p className="text-sm text-muted-foreground mb-6">
                             {searchQuery ? "Try a different search query" : "Create your first project to get started"}
                         </p>
                         {!searchQuery && (
-                            <Button onClick={() => setIsDialogOpen(true)}>Create Project</Button>
+                            <Button onClick={() => setIsDialogOpen(true)} className="w-full sm:w-auto">Create Project</Button>
                         )}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                         {filteredProjects.map((project) => (
                             <Card
                                 key={project.id}

@@ -78,20 +78,21 @@ export function PreviewPanel({ projectId, runtimeError, onDismiss, onFix }: Prev
           </Button>
         </div>
 
-        <div className="flex-1 flex items-center h-8 px-3 rounded-md bg-muted/50 text-sm text-muted-foreground">
-          <Globe className="w-3.5 h-3.5 mr-2 shrink-0" />
+        <div className="flex-1 flex items-center h-8 px-2.5 sm:px-3 rounded-md bg-muted/50 text-xs sm:text-sm text-muted-foreground min-w-0">
+          <Globe className="w-3.5 h-3.5 mr-1.5 sm:mr-2 shrink-0" />
           <span className="truncate">
             {previewUrl || "Click 'Run Preview' to deploy"}
           </span>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           {previewUrl && (
             <Button
               variant="ghost"
               size="icon"
               onClick={() => window.open(previewUrl, "_blank")}
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground shrink-0"
+              title="Open in new tab"
             >
               <ExternalLink className="w-3.5 h-3.5" />
             </Button>
@@ -100,17 +101,18 @@ export function PreviewPanel({ projectId, runtimeError, onDismiss, onFix }: Prev
             onClick={handleDeploy}
             disabled={isDeploying}
             size="sm"
-            className="h-7 px-3 bg-primary hover:bg-primary/90 text-xs font-medium"
+            className="h-7 px-2.5 sm:px-3 bg-primary hover:bg-primary/90 text-xs font-medium shrink-0"
           >
             {isDeploying ? (
               <>
-                <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
-                Deploying
+                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                <span className="hidden sm:inline">Deploying...</span>
+                <span className="sm:hidden">...</span>
               </>
             ) : (
               <>
-                <Play className="w-3 h-3 mr-1.5" />
-                Run Preview
+                <Play className="w-3 h-3 mr-1" />
+                <span>Run<span className="hidden sm:inline"> Preview</span></span>
               </>
             )}
           </Button>
