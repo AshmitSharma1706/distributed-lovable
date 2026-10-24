@@ -25,4 +25,14 @@ public class FileController {
         return ResponseEntity.ok(projectFileService.getFileContent(projectId, path));
     }
 
+    @GetMapping("/download-zip")
+    @org.springframework.security.access.prepost.PreAuthorize("@security.canViewProject(#projectId)")
+    public ResponseEntity<byte[]> downloadProjectZip(@PathVariable Long projectId) {
+        byte[] zipBytes = projectFileService.downloadProjectZip(projectId);
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"project-" + projectId + ".zip\"")
+                .contentType(org.springframework.http.MediaType.parseMediaType("application/zip"))
+                .body(zipBytes);
+    }
+
 }

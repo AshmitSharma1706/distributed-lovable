@@ -83,7 +83,7 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
             String watchCmd = String.format("nohup mc mirror --overwrite --watch myminio/lovable-ai/%d/ /app/ > /app/sync.log 2>&1 &", projectId);
             execCommand(podName, "syncer", "sh", "-c", watchCmd);
 
-            String startCmd = "npm install && nohup npm run dev -- --host 0.0.0.0 --port 5173 > /app/dev.log 2>&1 &";
+            String startCmd = "nohup sh -c 'npm install && npm run dev -- --host 0.0.0.0 --port 5173' > /app/dev.log 2>&1 &";
             execCommand(podName, "runner", "sh", "-c", startCmd);
 
             Pod updatedPod = client.pods().inNamespace(namespace).withName(podName).get();
@@ -196,6 +196,16 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
 
         redisTemplate.opsForValue().set("route:" + domain, podIp + ":5173", 6, TimeUnit.HOURS);
         log.info("Route Registered: {} -> {}", domain, podIp);
+
+        if (domain.contains("sslip.io")) {
+            String altDomain = domain.replace("34-93-185-166.sslip.io", "previews.codingshuttle.in");
+            redisTemplate.opsForValue().set("route:" + altDomain, podIp + ":5173", 6, TimeUnit.HOURS);
+            log.info("Fallback Route Registered: {} -> {}", altDomain, podIp);
+        } else if (domain.contains("previews.codingshuttle.in")) {
+            String altDomain = domain.replace("previews.codingshuttle.in", "34-93-185-166.sslip.io");
+            redisTemplate.opsForValue().set("route:" + altDomain, podIp + ":5173", 6, TimeUnit.HOURS);
+            log.info("Fallback Route Registered: {} -> {}", altDomain, podIp);
+        }
     }
 
     private void execCommand(String podName, String container, String... command) {

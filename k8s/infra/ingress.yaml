@@ -43,6 +43,17 @@ spec:
             name: lovable-proxy
             port:
               number: 80
+
+  - host: "*.34-93-185-166.sslip.io"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: lovable-proxy
+            port:
+              number: 80
   
   # 3. API Gateway Route
   - host: "api.codingshuttle.in"

@@ -33,9 +33,17 @@ spec:
                 name: lovable-shared-config
           env:
             - name: REDIS_URL
-              value: "redis://redis-0.redis.lovable-core.svc.cluster.local:6379" 
+              value: "redis://redis.lovable-core.svc.cluster.local:6379"
             - name: PORT
               value: "80"
+          volumeMounts:
+            - name: proxy-code
+              mountPath: /app/index.js
+              subPath: index.js
+      volumes:
+        - name: proxy-code
+          configMap:
+            name: lovable-proxy-code
 ---
 apiVersion: v1
 kind: Service

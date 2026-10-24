@@ -83,6 +83,7 @@ export interface ProjectMember {
   username: string; // The email/username
   name?: string;
   role: ProjectRole;
+  projectRole?: ProjectRole;
   invitedAt?: string;
 }
 

@@ -171,7 +171,7 @@ export const api = {
       },
     );
 
-    const data = await response.json();
+    const data = await response.text();
 
     if (!response.ok) {
       console.error(
@@ -180,7 +180,7 @@ export const api = {
       throw new Error("Failed to fetch file content");
     }
 
-    return data.content;
+    return data;
   },
 
   async deploy(projectId: string): Promise<DeployResponse> {
@@ -301,7 +301,12 @@ export const api = {
       throw new Error("Failed to fetch project members");
     }
 
-    return response.json();
+    const data = await response.json();
+    return data.map((m: any) => ({
+      ...m,
+      role: m.role || m.projectRole,
+      projectRole: m.projectRole || m.role,
+    }));
   },
 
   async inviteMember(
@@ -310,7 +315,7 @@ export const api = {
     role: ProjectRole,
   ): Promise<void> {
     const response = await fetch(
-      `${BASE_URL}/api/v1/workspace/projects/${projectId}/members`,
+      `${BASE_URL}/api/v1/workspace/projects/${projectId}/members/invite`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
@@ -427,9 +432,19 @@ export const api = {
               // 1. Send clean text to UI
               onChunk(content);
 
-              // 2. Accumulate for file parsing (Same as before)
+              // 2. Accumulate for file parsing
               fullContentBuffer += content;
-              // ... (rest of regex logic) ...
+
+              // Parse completed or in-progress file tags
+              const fileRegex = /<file\s+path="([^"]+)">([\s\S]*?)(?:<\/file>|$)/gi;
+              let fileMatch;
+              while ((fileMatch = fileRegex.exec(fullContentBuffer)) !== null) {
+                const filePath = fileMatch[1];
+                const fileContent = fileMatch[2];
+                if (filePath && fileContent) {
+                  onFile(filePath, fileContent);
+                }
+              }
             } catch (e) {
               console.error("Failed to parse SSE JSON:", e);
             }
