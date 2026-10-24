@@ -15,14 +15,16 @@ import {
 
 const getBaseUrl = (): string => {
   if (typeof window !== "undefined") {
-    const hostname = window.location.hostname;
-    if (hostname.includes("sslip.io")) {
-      const parts = hostname.split(".");
-      const baseDomain = parts.slice(-3).join(".");
-      return `${window.location.protocol}//api.${baseDomain}`;
+    // If running in local Vite development server, point to cluster API or VITE_API_URL
+    if (window.location.port === "5173" || window.location.hostname === "localhost") {
+      return import.meta.env.VITE_API_URL || "http://api.34-93-185-166.sslip.io";
     }
+    // In production (GKE/Ingress), use same-origin relative URLs ("/api/v1/...").
+    // The Ingress routes `/api/` directly to api-gateway on all hosts (sslip.io & codingshuttle.in).
+    // This completely prevents cross-subdomain SSL untrusted cert blocks on mobile, CORS latency, and DNS issues.
+    return "";
   }
-  return import.meta.env.VITE_API_URL || "http://api.codingshuttle.in";
+  return import.meta.env.VITE_API_URL || "http://api.34-93-185-166.sslip.io";
 };
 
 const BASE_URL = getBaseUrl();

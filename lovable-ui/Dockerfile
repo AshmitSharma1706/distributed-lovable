@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-ENV VITE_API_URL=http://api.codingshuttle.in
+ENV VITE_API_URL=
 RUN npm run build
 
 # Stage 2: Serve with NGINX
@@ -12,13 +12,19 @@ FROM nginx:alpine
 # Copy the built Vite assets to NGINX's serving directory
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Add a custom NGINX config to handle React Router (SPA routing)
+# Add a custom NGINX config to handle React Router (SPA routing) and prevent index.html caching
 RUN echo 'server { \
     listen 80; \
     location / { \
         root /usr/share/nginx/html; \
         index index.html index.htm; \
         try_files $uri $uri/ /index.html; \
+        add_header Cache-Control "no-store, no-cache, must-revalidate"; \
+    } \
+    location /assets/ { \
+        root /usr/share/nginx/html; \
+        expires 1y; \
+        add_header Cache-Control "public, immutable"; \
     } \
 }' > /etc/nginx/conf.d/default.conf
 
